@@ -21,6 +21,13 @@ import io.quarkus.vault.VaultSystemBackendEngine;
 import io.quarkus.vault.VaultTOTPSecretEngine;
 import io.quarkus.vault.VaultTransitSecretEngine;
 import io.quarkus.vault.client.common.VaultModel;
+import io.quarkus.vault.client.json.CommaStringToListDeserializer;
+import io.quarkus.vault.client.json.ListToCommaStringSerializer;
+import io.quarkus.vault.client.json.MapToStringSerializer;
+import io.quarkus.vault.client.json.NumberToStringSerializer;
+import io.quarkus.vault.client.json.ObjectToStringSerializer;
+import io.quarkus.vault.client.json.StringToMapDeserializer;
+import io.quarkus.vault.client.json.StringToNumberDeserializer;
 import io.quarkus.vault.runtime.*;
 import io.quarkus.vault.runtime.client.VaultClientProducer;
 import io.quarkus.vault.runtime.config.VaultBuildTimeConfig;
@@ -49,6 +56,16 @@ public class VaultProcessor {
                 .map(c -> c.name().toString())
                 .toArray(String[]::new);
         reflectiveClasses.produce(ReflectiveClassBuildItem.weakClass(modelClasses));
+
+        // (de)serializers referenced by the models through @JsonSerialize/@JsonDeserialize are instantiated reflectively
+        reflectiveClasses.produce(ReflectiveClassBuildItem.builder(
+                CommaStringToListDeserializer.class,
+                ListToCommaStringSerializer.class,
+                MapToStringSerializer.class,
+                NumberToStringSerializer.class,
+                ObjectToStringSerializer.class,
+                StringToMapDeserializer.class,
+                StringToNumberDeserializer.class).build());
 
         sslNativeSupport.produce(new ExtensionSslNativeSupportBuildItem(Feature.VAULT));
     }
